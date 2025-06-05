@@ -1,0 +1,34 @@
+# Vue.js
+/dist
+/node_modules
+/.env
+/.env.*.local
+/.vitepress/dist
+/.output
+/.cache
+/.nuxt
+/.vercel
+/.netlify
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.crash
+.terraform/
+.terraform.lock.hcl
+*.backup
+*.tfvars
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
