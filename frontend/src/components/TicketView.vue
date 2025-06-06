@@ -1,4 +1,4 @@
-\<template>
+<template>
   <div class="layout">
     <div class="tickets">
       <h1 class="header">Your Tickets</h1>

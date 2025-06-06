@@ -1,6 +1,10 @@
+
+locals {
+    external_id = "user_pool"
+}
+
 resource "aws_cognito_user_pool" "user_pool" {
     name = "ticket_sys_cog_pool"
-    region = "us-east-1"
 
     # Acct. Recovery
     account_recovery_setting {
@@ -21,13 +25,19 @@ resource "aws_cognito_user_pool" "user_pool" {
     sms_authentication_message = "Your code is {####}"
 
     sms_configuration {
-        external_id = aws_cognito_user_pool.user_pool.name
+        external_id = local.external_id
         sns_caller_arn = aws_iam_role.sns_caller_role.arn
         sns_region = "us-east-1"
     }
 
     software_token_mfa_configuration {
         enabled = true
+    }
+
+
+    # Lambda conf`
+    lambda_config {
+        post_confirmation = aws_lambda_function.assign_user_lambda.arn
     }
 
 }
@@ -49,16 +59,17 @@ resource "aws_cognito_user_pool_client" "cognito_client_pool" {
 
 # Admin group
 resource "aws_cognito_user_group" "admin" {
-    user_pool = aws_cognito_user_pool.user_pool.id
+    user_pool_id = aws_cognito_user_pool.user_pool.id
     name = "Admin"
     description = "Administrative user group"
 }
 
 # User group
 resource "aws_cognito_user_group" "user" {
-    user_pool = aws_cognito_user_pool.user_pool.id
+    user_pool_id = aws_cognito_user_pool.user_pool.id
     name = "User"
     description = "Standard user group"
+    precedence = 1
 }
 
 

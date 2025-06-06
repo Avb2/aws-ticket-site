@@ -1,5 +1,5 @@
 resource "aws_s3_bucket" "site_bucket" {
-    bucket = "ticket-site"
+    bucket = "ticket-site-060625"
 
 }
 

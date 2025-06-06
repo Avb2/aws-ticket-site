@@ -1,0 +1,16 @@
+import boto3
+
+## Adds new users to user group
+def handler(event, context):
+    client = boto3.client('cognito-idp')
+    
+    user_pool_id = event['userPoolId']
+    username = event['userName']
+    
+    client.admin_add_user_to_group(
+        UserPoolId=user_pool_id,
+        Username=username,
+        GroupName='User'
+    )
+
+    return event

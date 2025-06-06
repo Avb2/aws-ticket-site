@@ -28,7 +28,10 @@ resource "aws_iam_role_policy" "dynamo_post_perms" {
         Statement = [
         {
             Action = [
-            "dynamodb:PutItem",
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+                "dynamodb:PutItem",
             ]
             Effect   = "Allow"
             Resource = aws_dynamodb_table.ticket_table.arn
@@ -41,17 +44,12 @@ resource "aws_iam_role_policy" "dynamo_post_perms" {
 
 
 
-data "archive_file" "create_lambda_archive" {
-  type        = "zip"
-  source_file = "create_ticket_lambda.py"
-  output_path = "create_ticket_lambda.zip"
-}
 
 resource "aws_lambda_function" "create_ticket_lambda" {
   filename         = "create_ticket_lambda.zip"
   function_name    = "create_ticket_lambda"
   handler          = "create_ticket_lambda.handler"
   role             = aws_iam_role.dynamo_post_role.arn
-  source_code_hash = data.archive_file.create_lambda_archive.output_base64sha256
+  source_code_hash = filebase64sha256("create_ticket_lambda.zip")
   runtime          = "python3.12"
 }

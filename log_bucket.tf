@@ -1,5 +1,5 @@
 resource "aws_s3_bucket" "log_bucket" {
-    name = "cf-log-bucket"
+    bucket = "cf-log-bucket-060625"
 }
 
 
