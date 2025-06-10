@@ -8,7 +8,7 @@ import TicketViewAdmin  from './components/TicketViewAdmin.vue';
 <template>
 
 
-<LoginForm/>
+<router-view />
 
 
 </template>

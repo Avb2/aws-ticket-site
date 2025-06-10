@@ -27,7 +27,7 @@ def handler(event, context):
                         "#s": "Status"
                     },
                     ExpressionAttributeValues={
-                        ":newStatus": 0
+                        ":newStatus": 1
                     }
                 )
                 return {
@@ -40,6 +40,12 @@ def handler(event, context):
                     "body": json.dumps("Something wasn't right")
                     }
         except ClientError:
+            return {
+                "statusCode": 500,
+                "body": json.dumps("Error")
+            }
+        except Exception as e:
+            print(e)
             return {
                 "statusCode": 500,
                 "body": json.dumps("Error")

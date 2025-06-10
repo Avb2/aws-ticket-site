@@ -35,9 +35,9 @@ resource "aws_cognito_user_pool" "user_pool" {
     }
 
 
-    # Lambda conf`
+    # Lambda conf
     lambda_config {
-        post_confirmation = aws_lambda_function.assign_user_lambda.arn
+        post_confirmation = "arn:aws:lambda:us-east-2:897729097986:function:lambda_assign_user"
     }
 
 }
@@ -79,33 +79,34 @@ resource "aws_cognito_user_group" "user" {
 # Policy/Role
 
 data "aws_iam_policy_document" "sns_caller_policy_trust" {
-    statement {
-        effect = "Allow"
-        principals {
-            type = "Service"
-            identifiers = [
-                "cognito-idp.amazonaws.com"
-            ]
-        }
-        actions = [
-            "sts:AssumeRole"
-        ]
-        }
-    
-}
+  statement {
+    effect = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["cognito-idp.amazonaws.com"]
+    }
+    actions = ["sts:AssumeRole"]
 
+    condition {
+      test     = "StringEquals"
+      variable = "sts:ExternalId"
+      values   = [local.external_id]
+    }
+  }
+}
 
 data "aws_iam_policy_document" "sns_caller_policy_perms" {
-    statement {
-        effect = "Allow"
-        actions = [
-            "sns:Publish"
-        ]
-        resources = [
-            aws_sns_topic.sns_res.arn
-        ]
-    }
+  statement {
+    effect = "Allow"
+    actions = [
+      "sns:Publish",
+      "sns:CheckIfPhoneNumberIsOptedOut",
+      "sns:GetSMSAttributes"
+    ]
+    resources = ["*"]  
+  }
 }
+
 
 resource "aws_iam_role" "sns_caller_role" {
     name = "sns_caller_role"

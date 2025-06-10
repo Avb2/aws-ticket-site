@@ -1,59 +1,118 @@
 <script setup>
 import { ref } from 'vue';
 
-let tickets = [
-    {id: 120322, severity: 3, description: "My computer is malfunctioning"},
-    {id: 294924, severity: 1, description: "My toaster is on fire"},
-    {id: 532342, severity: 8, description: "My house is burning"}
-];
+import { signOut } from '@aws-amplify/auth';
+import { onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 
-let isSelected = ref(false);
-
+const router = useRouter();
+const bearer = localStorage.getItem('bearer');
+const userId = localStorage.getItem('user');
+const tickets = ref([]);
+const isSelected = ref(false);
 let selectedId = ref()
 let selectedDesc = ref()
-let selectedSev = ref()
+let selectedTitle = ref()
+let selectedUser = ref()
 
-function showTicket(id, description, severity){
-   if (isSelected & selectedId == id) {
+
+async function logout() {
+  try {
+    await signOut();
+    router.push('/');
+  } catch (err) {
+    console.error('Logout error:', err);
+  }
+}
+
+
+onMounted(async () => {
+  getTickets();
+});
+
+
+async function getTickets() {
+  const response = await fetch("https://c2vhw7f8hh.execute-api.us-east-2.amazonaws.com/get_tickets_admin", {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${bearer}`,
+      'Content-Type': 'application/json'
+    }
+  });
+
+  tickets.value = await response.json();
+  console.log("Tickets:", tickets.value);
+}
+
+
+function resolveTickets() {
+  fetch("https://c2vhw7f8hh.execute-api.us-east-2.amazonaws.com/resolve_ticket", {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${bearer}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      UserId: selectedUser.value,
+      Title: selectedId.value
+    }),
+  })
+}
+
+
+function toggleTicket(userId, id, title, description) {
+  if (id == selectedId.value && isSelected.value == true) {
     isSelected.value = false
-   } else {
-        selectedId.value = id
-        selectedDesc.value = description
-        selectedSev.value = severity
-        isSelected.value = true
-   }
+  } else {
+    selectedUser.value = userId
+    selectedId.value = id
+    selectedTitle.value = title
+    selectedDesc.value = description
+    isSelected.value = true
+
+  }
+
+
 }
 </script>
 
 
 <template>
+  <button class="logout-btn" @click="logout">Logout</button>
   <div class="layout">
     <div class="tickets">
       <h1 class="header">Your Tickets</h1>
-      <div id="ticketDisplay" class="ticket-box" v-for="ticket in tickets">
-        <div class="ticketCard" @click="showTicket(ticket.id, ticket.description, ticket.severity)">
-            <h2>{{ ticket.id }} - {{ ticket.severity }}</h2>
-            <h3>{{ ticket.description }}</h3>
+      <div id="ticketDisplay" class="ticket-box">
+
+        <div @click="toggleTicket(ticket.UserId, ticket.TicketId, ticket.Title, ticket.Description)"
+          v-for="ticket in tickets" :key="ticket.TicketId" class="ticket-card">
+          <b><span id="ticket-title">{{ ticket.Title }}</span> | <span id="ticket-id">{{ ticket.TicketId }}</span></b>
+          <p>
+            {{ ticket.Description }}
+          </p>
         </div>
+
       </div>
     </div>
 
     <div class="sidebar" v-show="isSelected">
       <div class="display-ticket">
         <h2>
-            Ticket Id
+          Ticket Id
         </h2>
         <p>{{ selectedId }}</p>
-        
+
+        <h2>Title</h2>
+        <p>{{ selectedTitle }}</p>
+
         <h2>Description</h2>
         <p>{{ selectedDesc }}</p>
 
-        <h2>Severity</h2>
-        <p>{{ selectedSev }}</p>
 
 
 
-        <button id="resolveTicketBtn" class="resolve-btn">Resolve</button>
+
+        <button @click="resolveTickets" id="resolveTicketBtn" class="resolve-btn">Resolve</button>
       </div>
     </div>
   </div>
@@ -62,6 +121,25 @@ function showTicket(id, description, severity){
 
 
 <style scoped>
+#ticket-title {
+  color: blue;
+}
+
+#ticket-id {
+  color: #2563eb;
+}
+
+
+.ticket-card {
+  text-align: center;
+  width: 100w;
+  border: solid;
+  border-color: #1118272B;
+}
+
+.ticket-card:hover {
+  border-color: #074BA3FF;
+}
 
 .ticketCard {
   color: #111827;
@@ -120,11 +198,12 @@ function showTicket(id, description, severity){
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center; /* Add this */
+  justify-content: center;
+  /* Add this */
 }
 
 .display-ticket {
-    color: #111827;
+  color: #111827;
   width: 100%;
   background: #ffffff;
   padding: 1.5rem;
@@ -137,7 +216,7 @@ function showTicket(id, description, severity){
 }
 
 .header {
-font-weight: bold;
+  font-weight: bold;
   font-size: 1.25rem;
   margin-bottom: 1.5rem;
   color: #111827;

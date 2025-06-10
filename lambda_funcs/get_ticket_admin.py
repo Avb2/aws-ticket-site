@@ -1,7 +1,8 @@
 import json
 import boto3
 from decimal import Decimal
-from boto3.dynamodb.conditions import Key
+from boto3.dynamodb.conditions import Key, Attr
+
 
 class DecimalEncoder(json.JSONEncoder):
     def default(self, o):
@@ -18,11 +19,8 @@ def handler(event, context):
     table = dynamodb.Table("ticket-table")
 
     try:
-        username = event["pathParameters"]["username"]
-        
-
-        response = table.query(
-            KeyConditionExpression=Key("UserId").eq(username)
+        response = table.scan(
+        FilterExpression=Attr('Status').ne(0)
         )
        
         return {

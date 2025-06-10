@@ -4,7 +4,7 @@
 data "aws_iam_policy_document" "check_db_trust" {
     statement {
         effect = "Allow"
-        principals = {
+        principals {
             type = "Service"
             identifiers = [
                 "lambda.amazonaws.com"
@@ -30,10 +30,10 @@ resource "aws_iam_policy" "check_db_lambda_perm" {
         Statement = [
             {
                 Effect = "Allow"
-                Actions = [
+                Action = [
                     "sns:Publish"
                 ]
-                Resources = [
+                Resource = [
                     aws_sns_topic.notify_inactive_ticket.arn
                 ]
             }

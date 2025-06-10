@@ -3,6 +3,26 @@ resource "aws_s3_bucket" "site_bucket" {
 
 }
 
+resource "aws_s3_bucket_policy" "cf_log_bucket_policy" {
+  bucket = aws_s3_bucket.site_bucket.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Sid       = "AWSCloudFrontLogs",
+        Effect    = "Allow",
+        Principal = {
+          Service = "cloudfront.amazonaws.com"
+        },
+        Action    = "s3:PutObject",
+        Resource  = "${aws_s3_bucket.site_bucket.arn}/*"
+      }
+    ]
+  })
+}
+
+
 
 
 resource "aws_s3_bucket_website_configuration" "site_config" {

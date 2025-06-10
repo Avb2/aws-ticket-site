@@ -53,7 +53,7 @@ resource "aws_lambda_function" "assign_user_lambda" {
 
     environment {
         variables = {
-        SNS_TOPIC_ARN = aws_sns_topic.sns_res.arn
+        SNS_TOPIC_ARN = "arn:aws:sns:us-east-2:897729097986:sns_mfa"
         }
   }
 }

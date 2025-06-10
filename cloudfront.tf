@@ -16,6 +16,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
         origin_access_control_id = aws_cloudfront_origin_access_control.default.id
         origin_id = local.s3_origin_id
     }
+    
 
     enabled = true
     is_ipv6_enabled = true
@@ -47,14 +48,12 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 
         viewer_protocol_policy = "redirect-to-https"
         min_ttl     = 0
-        default_ttl = 3600     # 1 hour
+        default_ttl = 3600     
         max_ttl     = 86400 
 
     }
 
 
-
-    # Cache behavior with precedence 0
     ordered_cache_behavior {
         path_pattern     = "/content/immutable/*"
         allowed_methods  = ["GET", "HEAD", "OPTIONS"]
@@ -77,7 +76,6 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
         viewer_protocol_policy = "redirect-to-https"
     }
 
-    # Cache behavior with precedence 1
     ordered_cache_behavior {
         path_pattern     = "/content/*"
         allowed_methods  = ["GET", "HEAD", "OPTIONS"]
@@ -113,4 +111,46 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   }
 
 
+}
+
+resource "aws_s3_bucket_ownership_controls" "log_bucket_acl_control" {
+  bucket = aws_s3_bucket.log_bucket.id
+
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
+resource "aws_s3_bucket_acl" "log_bucket_acl" {
+  depends_on = [aws_s3_bucket_ownership_controls.log_bucket_acl_control]
+  bucket     = aws_s3_bucket.log_bucket.id
+  acl        = "log-delivery-write"
+}
+
+
+
+data "aws_iam_policy_document" "cf_read_access" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["cloudfront.amazonaws.com"]
+    }
+
+    actions = ["s3:GetObject"]
+
+    resources = ["${aws_s3_bucket.site_bucket.arn}/*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "AWS:SourceArn"
+      values   = [aws_cloudfront_distribution.s3_distribution.arn]
+    }
+  }
+}
+
+resource "aws_s3_bucket_policy" "allow_cf_access" {
+  bucket = aws_s3_bucket.site_bucket.id
+  policy = data.aws_iam_policy_document.cf_read_access.json
 }

@@ -20,7 +20,8 @@ resource "aws_apigatewayv2_authorizer" "cognito_auth" {
     name = "cognito-auth"
     jwt_configuration {
         audience = [aws_cognito_user_pool_client.cognito_client_pool.id] 
-        issuer   = "https://cognito-idp.us-east-1.amazonaws.com/${aws_cognito_user_pool.user_pool.id}"
+       issuer = "https://cognito-idp.us-east-2.amazonaws.com/${aws_cognito_user_pool.user_pool.id}"
+
     }
 }
 
@@ -36,18 +37,14 @@ resource "aws_apigatewayv2_stage" "default_stage" {
   }
 
   access_log_settings {
-    destination_arn = "arn:aws:logs:us-east-1:123456789012:log-group:/aws/apigateway/ticket-api"
+    destination_arn = aws_cloudwatch_log_group.api_gw_logs.arn
     format = jsonencode({
       requestId = "$context.requestId",
       status    = "$context.status"
     })
   }
 
-  route_settings {
-    route_key = "$default"
-    throttling_burst_limit = 5000
-    throttling_rate_limit  = 10000
-  }
+
 }
 
 

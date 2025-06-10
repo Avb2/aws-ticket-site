@@ -31,8 +31,9 @@ resource "aws_iam_role_policy" "scheduler_invoke_policy" {
 
 resource "aws_scheduler_schedule" "every_hour" {
   name        = "check-db-every-hour"
-  group_name  = "ticket"
-  schedule_expression = "rate(1 hour)" 
+  group_name  = aws_scheduler_schedule_group.ticket_group.name
+  schedule_expression = "rate(1 hour)"
+
   flexible_time_window {
     mode = "OFF"
   }
@@ -40,6 +41,12 @@ resource "aws_scheduler_schedule" "every_hour" {
   target {
     arn      = aws_lambda_function.check_db.arn
     role_arn = aws_iam_role.scheduler_invoke_role.arn
-    input    = jsonencode({}) 
+    input    = jsonencode({})
   }
+}
+
+
+
+resource "aws_scheduler_schedule_group" "ticket_group" {
+  name = "ticket"
 }

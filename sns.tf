@@ -1,11 +1,32 @@
 
 # Used for MFA
 
-resource "aws_sns_topic" "sns_res"{
-    depends_on = [aws_cognito_user_pool.user_pool]
-    name = "sns_mfa"
+data "aws_iam_policy_document" "sns_topic_policy" {
+  statement {
+    sid    = "AllowCognitoToPublish"
+    effect = "Allow"
 
-    policy = jsonencode({
+    principals {
+      type        = "Service"
+      identifiers = ["cognito-idp.amazonaws.com"]
+    }
+
+    actions   = ["sns:Publish"]
+    resources = ["*"] 
+
+     condition {
+       test     = "StringEquals"
+       variable = "AWS:SourceArn"
+       values   = ["arn:aws:cognito-idp:us-east-2:897729097986:userpool/us-east-2_LVlCSxu4M"]
+     }
+  }
+}
+
+# SNS topic used for Cognito MFA
+resource "aws_sns_topic" "sns_res" {
+  name = "sns_mfa"
+
+  policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
       {
@@ -15,14 +36,17 @@ resource "aws_sns_topic" "sns_res"{
           Service = "cognito-idp.amazonaws.com"
         },
         Action = "sns:Publish",
-        Resource = aws_sns_topic.sns_res.arn,
+        Resource = "*",
         Condition = {
           StringEquals = {
             "AWS:SourceArn" = aws_cognito_user_pool.user_pool.arn
+          },
+          StringEqualsIfExists = {
+            "sts:ExternalId" = local.external_id
           }
         }
       }
     ]
   })
-
 }
+
